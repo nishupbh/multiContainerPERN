@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t nishupbh/react-test -f ./client/Dockerfile.dev ./client/
+
+script:
+  - docker run -e CI=true nishupbh/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t nishupbh/multi-container-pern ./client
+  - docker build -t nishupbh/multi-nginx ./nginx
+  - docker build -t nishupbh/multi-server ./server
+  - docker build -t nishupbh/multi-worker ./worker
+  #Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those image and push it to docker hub
+  - docker push nishupbh/multi-container-pern
+  - docker push nishupbh/multi-nginx
+  - docker push nishupbh/multi-server
+  - docker push nishupbh/multi-worker
